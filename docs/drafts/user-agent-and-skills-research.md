@@ -286,7 +286,23 @@ Codex `skills/list` 返回的元数据包含 `scope`、`path`、`enabled`、依�
 
 它们属于随 `tdcanvas` Codex 插件一起提供的仓库资产（`plugins/tdcanvas/.codex-plugin/plugin.json`、`plugins/tdcanvas/README.md:1-27`），不是自动复制到 `~/.tdcanvas/codex-workspaces/site/.agents/skills` 的用户 Skill。只有在外部 Codex 中安装该插件后，外部 Codex 才可能按自己的插件机制发现这些 Skill；右侧 AgentPanel 的本地 Skill 管理仍以当前 workspace 的 `skills/list` 结果为准。另一个 `.agents/skills/project-docs/` 是本研究 fork 的开发调研技能，也不是面向最终用户的影视 Skill。
 
-### 5.4 写入和并发保护
+### 5.4 当前仓库内置 Skill 清单（按受众分类）
+
+截至当前源码，仓库中可直接找到 5 个 `SKILL.md`，但它们不属于同一个产品层级：
+
+| 目录 | Skill | 面向对象 | 作用 | 是否属于右侧最终用户 Agent 的产品 Skill |
+| --- | --- | --- | --- | --- |
+| `plugins/tdcanvas/skills/canvas/` | `canvas` | TDCanvas 用户 / 外部 Codex | 读取画布、选择工具、创建和连接节点、创建生成流程、触发文本/图片/视频/音频生成 | 是，但需通过 TDCanvas Codex 插件或相应 Codex Skill 发现机制提供 |
+| `plugins/tdcanvas/skills/open-canvas/` | `open-canvas` | TDCanvas 用户 / 外部 Codex | 启动 Web、构建/启动本机 `canvas-agent`、读取 URL/token 并打开画布 | 是，但主要服务“打开并连接 TDCanvas”流程 |
+| `.agents/skills/project-docs/` | `project-docs` | 本研究 fork 的开发/文档 Agent | 调研、编写和审查 TDCanvas 文档，并降低与 `upstream` 合并时的冲突 | 否 |
+| `.agents/skills/frontend-design/` | `frontend-design` | 开发 Agent | 设计和实现前端界面时的视觉与交互规范 | 否 |
+| `.agents/skills/vercel-react-best-practices/` | `vercel-react-best-practices` | 开发 Agent | React/Vite 前端性能和实现实践 | 否 |
+
+这里的“仓库内置”只表示文件随当前 checkout 存在，不表示 5 个 Skill 都会自动出现在最终用户右侧面板中。右侧面板的可选择列表来自本机 Codex app-server 的 `skills/list`；其中 `canvas` 和 `open-canvas` 还需要按插件方式安装/发现，`.agents/skills/` 下的三个 Skill 主要是本仓库开发环境使用的 Agent Skill。
+
+当前没有发现仓库内置的导演、剧本拆解、分镜、角色一致性、剪辑时间线或专用 ComfyUI Agent Skill；这些只能由用户后续创建 Skill，或由未来产品代码补充。
+
+### 5.5 写入和并发保护
 
 SkillStore 使用原子文件写入、串行写队列和 SHA-256 revision。编辑/删除时必须提交当前 revision，若 Skill 已被另一个窗口或外部编辑器改过，服务返回冲突而不是覆盖新内容（`canvas-agent/src/skills/store.ts:121-170,309-317,378-391`）。这使面板编辑相对适合多窗口使用，但不会替代 Git 或用户自己的备份。
 
@@ -345,12 +361,13 @@ SkillStore 使用原子文件写入、串行写队列和 SHA-256 revision。编�
 - `canvas-agent/src/canvas/schemas.ts:9-41`、`canvas-agent/src/canvas/operations.ts:9-66`、`canvas-agent/src/canvas/session.ts:435-500` — MCP 工具、画布操作转换和网页执行回传。
 - `canvas-agent/src/canvas/types.ts:1-6`、`web/src/integrations/comfyui-local/canvas-node.tsx:20-98`、`web/src/integrations/comfyui-local/execution.ts:19-129` — Agent 的内置节点类型与 ComfyUI 宏节点/执行链边界。
 - `web/src-tauri/tauri.conf.json`、`web/package.json`、`web/scripts/package-desktop.mjs`、`Dockerfile`、`render.yaml`、`vercel.json` — 桌面打包入口和 Web 静态部署入口；未发现 `canvas-agent` sidecar 或云端 Agent 启动项。
-- `canvas-agent/agent-instructions.md:1-18`、`plugins/tdcanvas/skills/canvas/SKILL.md`、`plugins/tdcanvas/skills/open-canvas/SKILL.md` — Agent 行为约束和仓库随插件提供的 Skill 示例。
+- `canvas-agent/agent-instructions.md:1-18`、`plugins/tdcanvas/.codex-plugin/plugin.json`、`plugins/tdcanvas/skills/canvas/SKILL.md`、`plugins/tdcanvas/skills/open-canvas/SKILL.md` — Agent 行为约束、插件声明和面向最终用户的产品 Skill。
+- `.agents/skills/project-docs/SKILL.md`、`.agents/skills/frontend-design/SKILL.md`、`.agents/skills/vercel-react-best-practices/SKILL.md` — 当前 checkout 中并存的开发/研究 Skill，不应误归类为最终用户影视 Skill。
 - `docs/content/docs/development/local-codex-canvas.zh-CN.mdx:1-142`、`canvas-agent/README.md:1-75` — 现有架构说明、安装和 MCP 使用文档。
 
 ## 验证记录
 
 - 已检查 `AGENTS.md`、`.agents/skills/project-docs/SKILL.md` 及其模板，并按 research fork 约定把结果留在 `docs/drafts/`。
-- 已使用 `rg`、`sed` 和 `nl` 静态阅读上述实现、配置、桌面打包脚本、仓库 Skill、ComfyUI 集成、现有文档和相关测试入口；据此修正了“Agent 可直接运行 ComfyUI 工作流”的过宽表述。未修改应用代码或发布文档。
+- 已使用 `rg`、`find`、`sed` 和 `nl` 静态阅读上述实现、配置、桌面打包脚本、仓库 Skill、ComfyUI 集成、现有文档和相关测试入口；补充了当前 checkout 中 5 个 Skill 的受众和产品边界，并修正了“Agent 可直接运行 ComfyUI 工作流”的过宽表述。未修改应用代码或发布文档。
 - 未运行构建、测试、Codex app-server、Claude CLI、浏览器端到端流程或真实媒体生成；因此本文是源码级调研，不是运行验收报告。
 - `docs/content/docs/progress/todo.mdx` 和 `docs/content/docs/progress/pending-test.mdx` 未因本次 research-only 调研修改；本次没有改变产品功能状态。
