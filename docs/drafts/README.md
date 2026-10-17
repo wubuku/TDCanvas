@@ -6,6 +6,8 @@
 
 - [macOS 桌面客户端构建与安装记录](desktop-build-macos.md)：本机桌面应用构建、打包、安装过程及复现条件。
 - [TDCanvas 如何集成本地 ComfyUI](comfyui-integration-research.md)：本地 ComfyUI 的桌面接入、工作流导入、画布执行、输出和边界调研。
+- [TDCanvas 技术架构说明](tdcanvas-technical-architecture.md)：Web、Tauri、画布插件、ComfyUI、Canvas Agent、存储和构建入口的跨模块架构调研。
+- [TDCanvas 用户 Agent 与 Skill 机制调研](user-agent-and-skills-research.md)：面向 AI 影视制作者的 Agent 入口、画布能力、Skill 执行链和 Skill 管理边界。
 
 ## 维护约定
 
